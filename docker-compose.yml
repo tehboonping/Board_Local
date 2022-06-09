@@ -1,0 +1,57 @@
+version: "3"
+
+services:
+  web:
+    container_name: board_web
+    build: .
+    ports:
+      - 8081:80
+    volumes:
+      - ./app/web/:/var/www/html/web/
+      - ./app/images/:/var/www/html/images/
+    depends_on:
+      - mysql
+    links:
+      - redis
+
+  manager:
+    container_name: board_manager
+    image: board_local_web
+    ports:
+      - 8082:80
+    volumes:
+      - ./app/manager/:/var/www/html/manager/
+      - ./app/images/:/var/www/html/images/
+    depends_on:
+      - mysql
+
+  mysql:
+    container_name: board_mysql
+    build: ./mysql/    
+    volumes:
+      - ./mysql/db:/var/lib/mysql
+      - ./mysql/initdb.d:/docker-entrypoint-initdb.d
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=pass
+
+  redis:
+    container_name: board_redis
+    image: redis:latest
+    ports:
+      - 6380:6379
+    volumes:
+      - ./redis:/data
+
+  phpmyadmin:
+    container_name: board_phpmyadmin
+    image: phpmyadmin/phpmyadmin
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOSTS=mysql
+      - PMA_USER=root
+      - PMA_PASSWORD=pass
+    ports:
+      - 8083:80
+    depends_on:
+      - mysql
